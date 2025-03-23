@@ -1,5 +1,6 @@
 import './App.css'
 import { useState } from 'react'
+import confetti from 'canvas-confetti'
 
 const TURNS = {
   X: 'x',
@@ -42,15 +43,30 @@ function App() {
     // chequeamos si hay un ganador
     for (const combo of WINNER_COMBOS) {
       const [a,b,c] = combo
-      if (boardToCheck[a] && 
+      if (
+        boardToCheck[a] && 
         boardToCheck[a] == boardToCheck[b] &&
-        boardToCheck[a] == boardToCheck[c]){
+        boardToCheck[a] == boardToCheck[c]
+      ){
           return boardToCheck[a]
         }
     }
+    // si no hay ganador
+    return null
+  }
+
+  const resetGame = () => {
+    setBoard(Array(9).fill(null))
+    setTurn(TURNS.X)
+    setWinner(null)
+  }
+
+  const checkEndGame = (newBoard) => {
+    return newBoard.every((square) => square !== null)
   }
 
   const updateBoard = (index) => {
+    //si esta ocupado o ya ganaron no se completa
     if(board[index] || winner) return
     //change board
     const newBoard = [...board]
@@ -60,25 +76,30 @@ function App() {
     //change turn
     const newTurn = turn == TURNS.X ? TURNS.O : TURNS.X
     setTurn(newTurn)
+    //si ya hay ganador
     const newWinner = checkWinner(newBoard)
     if (newWinner){
-      setBoard(newWinner)
+      confetti()
+      setWinner(newWinner)
+    } else if (checkEndGame(newBoard)){
+      setWinner(false) 
     }
   }
 
   return (
     <main className='board'>
       <h1>Tic Tac Toe</h1>
+      <button onClick={resetGame}>Reset del Juego</button>
       <section className='game'>
         {
-          board.map((_,index) => {
+          board.map((square,index) => {
             return (
               <Square
               key={index}
               index={index}
               updateBoard={updateBoard}
               >
-                {}
+                {square}
               </Square>
             )
           })
@@ -92,6 +113,31 @@ function App() {
           {TURNS.O}
         </Square>
       </section>
+
+      {
+        winner != null && (
+          <section className='winner'>
+            <div className='text'>
+              <h2>
+                {
+                  winner == false
+                  ? 'Empate'
+                  : 'Ganó:'
+                }
+              </h2>
+
+              <header className='win'>
+                {winner && <Square>{winner}</Square>}
+              </header>
+
+              <footer>
+                <button onClick={resetGame}>Empezar de nuevo</button>
+              </footer>
+            </div>
+
+          </section>
+        )
+      }
     </main>
   )
 }
